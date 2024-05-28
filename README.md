@@ -1,2 +1,2 @@
-# application-benchmarks
-Has specific applications to benchmark the c-class core. 
+# Vector-benchmarks
+Contains the benchmarks which is going to be used for my MS project analysis
