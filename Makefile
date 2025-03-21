@@ -1,7 +1,7 @@
 xlen ?= 64
 linesize=$$(($(xlen)/8))
 target ?= CUSTOM
-ITERATIONS ?= 2
+ITERATIONS ?= 1
 HPM_ENABLE ?= 1 #1 enable ,0 disable
 march ?= imafdc
 RISCV_PREFIX ?= riscv$(xlen)-unknown-elf-
@@ -115,6 +115,19 @@ conv2d:
 				./common/syscalls.c ./common/crt.S
 	@$(RISCV_OBJDUMP) $(OUTDIR)/conv2d.riscv > $(OUTDIR)/conv2d.dump
 	@$(RISCV_HEX) $(OUTDIR)/conv2d.riscv 2147483648 > $(OUTDIR)/code.mem
+
+.PHONY: BitNet
+BitNet:
+	@echo "Compiling BitNet"
+	@mkdir -p output/
+	$(RISCV_GCC) -I./common -I./BitNet -DCONFIG_RISCV64=True \
+		-D$(target)=True -DITERATIONS=$(ITERATIONS) -DHPM_ENABLE=$(HPM_ENABLE) \
+		-mcmodel=medany -static -std=gnu99 -O -ffast-math \
+		-fno-common -fno-builtin-printf -march=rv$(xlen)$(march) -w -static \
+		-nostartfiles -lgcc -T ./common/link.ld -o $(OUTDIR)/BitNet.riscv ./BitNet/BitNetMCUdemo.c \
+		./common/syscalls.c ./common/crt.S
+	@$(RISCV_OBJDUMP) $(OUTDIR)/BitNet.riscv > $(OUTDIR)/BitNet.dump
+	@$(RISCV_HEX) $(OUTDIR)/BitNet.riscv 2147483648 > $(OUTDIR)/code.mem
 
 .PHONY: clean
 clean:
