@@ -1010,10 +1010,15 @@
 #define EVENT_INSTR_QUEUE_FULL        32
 #define EVENT_INSTR_QUEUE_EMPTY       33
 #define EVENT_DUAL_ISSUED             34
-#define EVENT_ISB3_ISB4_FULL          35
-#define EVENT_ISB3_ISB4_EMPTY         36
-#define EVENT_ISB4_ISB5_FULL          37
-#define EVENT_ISB4_ISB5_EMPTY         38
+#define EVENT_RAW_HAZARD              35
+#define EVENT_ONE_INSTR               36
+#define EVENT_ISB3_ISB4_FULL          37
+#define EVENT_ISB3_ISB4_EMPTY         38
+#define EVENT_ISB4_ISB5_FULL          39
+#define EVENT_ISB4_ISB5_EMPTY         40
+#define EVENT_EXEFLUSH                41
+#define EVENT_WBFLUSH                 42
+#define EVENT_ST3_NOT_FIRING          43
 #ifdef DECLARE_INSN
 DECLARE_INSN(beq, MATCH_BEQ, MASK_BEQ)
 DECLARE_INSN(bne, MATCH_BNE, MASK_BNE)
