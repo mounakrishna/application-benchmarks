@@ -216,7 +216,9 @@ MAIN_RETURN_TYPE main(int argc, char *argv[]) {
 	#if (HPM_ENABLE)
 	write_csr(mhpmevent3, EVENT_MISPREDICTION     );
 	write_csr(mhpmevent4, EVENT_EXCEPTIONS        );
+	//write_csr(mhpmevent4, EVENT_MUL_BRANCH_HAZARD );
 	write_csr(mhpmevent5, EVENT_CSROPS            );
+  //write_csr(mhpmevent5, EVENT_MUL_MEM_HAZARD    );
 	write_csr(mhpmevent6, EVENT_JUMPS             );
 	write_csr(mhpmevent7, EVENT_BRANCHES          );
 	write_csr(mhpmevent8, EVENT_FLOATS            );
@@ -226,16 +228,26 @@ MAIN_RETURN_TYPE main(int argc, char *argv[]) {
 	write_csr(mhpmevent12,EVENT_INSTR_QUEUE_FULL  );
 	write_csr(mhpmevent13,EVENT_INSTR_QUEUE_EMPTY );
 	write_csr(mhpmevent14,EVENT_DUAL_ISSUED       );
-	write_csr(mhpmevent15,EVENT_ISB3_ISB4_FULL    );
-	write_csr(mhpmevent16,EVENT_ISB3_ISB4_EMPTY   );
-	write_csr(mhpmevent17,EVENT_ISB4_ISB5_FULL    );
-	write_csr(mhpmevent18,EVENT_ISB4_ISB5_EMPTY   );
-  write_csr(mhpmevent19,EVENT_ICACHE_ACCESS     );
-  write_csr(mhpmevent20,EVENT_ICACHE_MISS       );
-  write_csr(mhpmevent21,EVENT_DCACHE_READ_ACCESS);
-  write_csr(mhpmevent22,EVENT_DCACHE_READ_MISS  );
-  write_csr(mhpmevent23,EVENT_DCACHE_WRITE_ACCESS);
-  write_csr(mhpmevent24,EVENT_DCACHE_WRITE_MISS );
+	//write_csr(mhpmevent15,EVENT_ISB3_ISB4_FULL    );
+  write_csr(mhpmevent15,EVENT_MUL_FLOAT_HAZARD  );
+	//write_csr(mhpmevent16,EVENT_ISB3_ISB4_EMPTY   );
+  write_csr(mhpmevent16,EVENT_MUL_MUL_HAZARD    );
+	//write_csr(mhpmevent17,EVENT_ISB4_ISB5_FULL    );
+  write_csr(mhpmevent17,EVENT_MEM_MEM_HAZARD    );
+	//write_csr(mhpmevent18,EVENT_ISB4_ISB5_EMPTY   );
+  write_csr(mhpmevent18,EVENT_MEM_BRANCH_HAZARD );
+  //write_csr(mhpmevent19,EVENT_ICACHE_ACCESS     );
+  write_csr(mhpmevent19,EVENT_MEM_FLOAT_HAZARD  );
+  //write_csr(mhpmevent20,EVENT_ICACHE_MISS       );
+  write_csr(mhpmevent20,EVENT_FLOAT_BRANCH_HAZARD);
+  //write_csr(mhpmevent21,EVENT_DCACHE_READ_ACCESS);
+  write_csr(mhpmevent21,EVENT_FLOAT_FLOAT_HAZARD);
+  //write_csr(mhpmevent22,EVENT_DCACHE_READ_MISS  );
+  write_csr(mhpmevent22,EVENT_BRANCH_BRANCH_HAZARD);
+  //write_csr(mhpmevent23,EVENT_DCACHE_WRITE_ACCESS);
+  write_csr(mhpmevent23,EVENT_MUL_BRANCH_HAZARD );
+  //write_csr(mhpmevent24,EVENT_DCACHE_WRITE_MISS );
+  write_csr(mhpmevent25,EVENT_MUL_MEM_HAZARD    );
   write_csr(mhpmevent25,EVENT_RAW_HAZARD        );
   write_csr(mhpmevent26,EVENT_ONE_INSTR        );
   write_csr(mhpmevent27,EVENT_EXEFLUSH          );
@@ -254,6 +266,9 @@ MAIN_RETURN_TYPE main(int argc, char *argv[]) {
 	//write_csr(mhpmevent31,30);
 	//write_csr(mcountinhibit,5);
 	#endif
+  write_csr(0x800, 0x27);
+  write_csr(mcycle, 0);
+  write_csr(minstret, 0);
 	start_time();
 #if (MULTITHREAD>1)
 	if (default_num_contexts>MULTITHREAD) {
@@ -270,12 +285,13 @@ MAIN_RETURN_TYPE main(int argc, char *argv[]) {
 #else
 	iterate(&results[0]);
 #endif
+  write_csr(0x800, 0x07);
 	stop_time();
 	total_time=get_time();
 	#if (HPM_ENABLE)
 	//write_csr(mcountinhibit,0);
-	// unsigned int mcycle=read_csr(mcycle);
-	// unsigned int minstret=read_csr(minstret);
+	unsigned int mcycle_value=read_csr(mcycle);
+	unsigned int minstret_value=read_csr(minstret);
 	write_csr(mhpmevent3,0);
 	write_csr(mhpmevent4,0);
 	write_csr(mhpmevent5,0);
@@ -305,8 +321,8 @@ MAIN_RETURN_TYPE main(int argc, char *argv[]) {
 	write_csr(mhpmevent29,0);
 	//write_csr(mhpmevent30,0);
 	//write_csr(mhpmevent31,0);
-	printf("mcycle = %d \n",read_csr(mcycle));
-	printf("minstret = %d \n",read_csr(minstret));
+	printf("mcycle = %d \n",mcycle_value);
+	printf("minstret = %d \n",minstret_value);
 	printf("misprediction = %d \n",read_csr(mhpmcounter3));
 	printf("exceptions = %d \n",read_csr(mhpmcounter4));
 	printf("csrops= %d \n",read_csr(mhpmcounter5));
@@ -319,16 +335,26 @@ MAIN_RETURN_TYPE main(int argc, char *argv[]) {
   printf("instr_queue_full= %d\n", read_csr(mhpmcounter12));
   printf("instr_queue_empty= %d\n", read_csr(mhpmcounter13));
   printf("dual_issued= %d\n", read_csr(mhpmcounter14));
-  printf("isb3_isb4_full= %d\n", read_csr(mhpmcounter15));
-  printf("isb3_isb4_empty= %d\n", read_csr(mhpmcounter16));
-  printf("isb4_isb5_full= %d\n", read_csr(mhpmcounter17));
-  printf("isb4_isb5_empty= %d\n", read_csr(mhpmcounter18));
-  printf("icache_access= %d\n", read_csr(mhpmcounter19));
-  printf("icache_miss= %d\n", read_csr(mhpmcounter20));
-  printf("dcache_read_access= %d\n", read_csr(mhpmcounter21));
-  printf("dcache_read_miss= %d\n", read_csr(mhpmcounter22));
-  printf("dcache_write_access= %d\n", read_csr(mhpmcounter23));
-  printf("dcache_write_miss= %d\n", read_csr(mhpmcounter24));
+  //printf("isb3_isb4_full= %d\n", read_csr(mhpmcounter15));
+  //printf("isb3_isb4_empty= %d\n", read_csr(mhpmcounter16));
+  //printf("isb4_isb5_full= %d\n", read_csr(mhpmcounter17));
+  //printf("isb4_isb5_empty= %d\n", read_csr(mhpmcounter18));
+  //printf("icache_access= %d\n", read_csr(mhpmcounter19));
+  //printf("icache_miss= %d\n", read_csr(mhpmcounter20));
+  //printf("dcache_read_access= %d\n", read_csr(mhpmcounter21));
+  //printf("dcache_read_miss= %d\n", read_csr(mhpmcounter22));
+  //printf("dcache_write_access= %d\n", read_csr(mhpmcounter23));
+  //printf("dcache_write_miss= %d\n", read_csr(mhpmcounter24));
+  printf("mul_float_hazard= %d\n", read_csr(mhpmcounter15));
+  printf("mul_mul_hazard= %d\n", read_csr(mhpmcounter16));
+  printf("mem_mem_hazard= %d\n", read_csr(mhpmcounter17));
+  printf("mem_branch_hazard= %d\n", read_csr(mhpmcounter18));
+  printf("mem_float_hazard= %d\n", read_csr(mhpmcounter19));
+  printf("float_branch_hazard= %d\n", read_csr(mhpmcounter20));
+  printf("float_float_hazard= %d\n", read_csr(mhpmcounter21));
+  printf("branch_branch_hazard= %d\n", read_csr(mhpmcounter22));
+  printf("mul_branch_hazard= %d\n", read_csr(mhpmcounter23));
+  printf("mul_mem_hazard= %d\n", read_csr(mhpmcounter24));
   printf("raw_hazard= %d\n", read_csr(mhpmcounter25));
   printf("Only One instruction present in queue = %d\n", read_csr(mhpmcounter26));
   printf("Number of Execute flushes = %d\n", read_csr(mhpmcounter27));

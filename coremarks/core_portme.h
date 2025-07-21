@@ -12,7 +12,7 @@
 /************************/
 /* Data types and settings */
 /************************/
-/* Configuration : HAS_FLOAT 
+/* Configuration: HAS_FLOAT
 	Define to 1 if the platform supports floating point.
 */
 #ifndef HAS_FLOAT 
@@ -48,8 +48,20 @@
 /* Configuration : CORE_TICKS
 	Define type of return from the timing functions.
  */
+#if defined(_MSC_VER)
+#include <windows.h>
+typedef size_t CORE_TICKS;
+#elif HAS_TIME_H
 #include <time.h>
-typedef long CORE_TICKS;
+typedef clock_t CORE_TICKS;
+#else
+/* Configuration: size_t and clock_t
+     Note these need to match the size of the clock output and the xLen the processor supports
+ */
+typedef unsigned long int size_t;
+typedef unsigned long int clock_t;
+typedef clock_t CORE_TICKS;
+#endif
 
 /* Definitions : COMPILER_VERSION, COMPILER_FLAGS, MEM_LOCATION
 	Initialize these strings per platform
@@ -65,7 +77,8 @@ typedef long CORE_TICKS;
  #define COMPILER_FLAGS FLAGSTR /* "Please put compiler flags here (e.g. -o3)" */
 #endif
 #ifndef MEM_LOCATION 
- #define MEM_LOCATION "STACK"
+ #define MEM_LOCATION "Code in OCSRAM"
+ #define MEM_LOCATION_UNSPEC 0
 #endif
 
 /* Data Types :
@@ -79,8 +92,8 @@ typedef unsigned short ee_u16;
 typedef signed int ee_s32;
 typedef double ee_f32;
 typedef unsigned char ee_u8;
-typedef signed int ee_u32;
-typedef signed long ee_u64;
+typedef unsigned int ee_u32;
+typedef unsigned long ee_u64;
 #if __riscv_xlen == 32
 typedef ee_u32 ee_ptr_int;
 #else
@@ -93,10 +106,10 @@ typedef signed int ee_size_t;
 */
 #define align_mem(x) (void *)(4 + (((ee_ptr_int)(x) - 1) & ~3))
 
-/* Configuration : SEED_METHOD
+/* Configuration: SEED_METHOD
 	Defines method to get seed values that cannot be computed at compile time.
-	
-	Valid values :
+
+	Valid values:
 	SEED_ARG - from command line.
 	SEED_FUNC - from a system function.
 	SEED_VOLATILE - from volatile variables.
@@ -114,26 +127,40 @@ typedef signed int ee_size_t;
 	MEM_STACK - to allocate the data block on the stack (NYI).
 */
 #ifndef MEM_METHOD
-#define MEM_METHOD MEM_STACK
+#define MEM_METHOD MEM_STATIC
 #endif
 
-/* Configuration : MULTITHREAD
-	Define for parallel execution 
-	
-	Valid values :
+/* Configuration: MULTITHREAD
+	Define for parallel execution
+
+	Valid values:
 	1 - only one context (default).
 	N>1 - will execute N copies in parallel.
-	
-	Note : 
+
+	Note:
 	If this flag is defined to more then 1, an implementation for launching parallel contexts must be defined.
-	
+
 	Two sample implementations are provided. Use <USE_PTHREAD> or <USE_FORK> to enable them.
-	
+
 	It is valid to have a different implementation of <core_start_parallel> and <core_end_parallel> in <core_portme.c>,
-	to fit a particular architecture. 
+	to fit a particular architecture.
 */
 #ifndef MULTITHREAD
 #define MULTITHREAD 1
+#endif
+
+/* Configuration: USE_PTHREAD
+	Sample implementation for launching parallel contexts
+	This implementation uses pthread_thread_create and pthread_join.
+
+	Valid values:
+	0 - Do not use pthreads API.
+	1 - Use pthreads API
+
+	Note:
+	This flag only matters if MULTITHREAD has been defined to a value greater then 1.
+*/
+#ifndef USE_PTHREAD
 #define USE_PTHREAD 0
 #define USE_FORK 0
 #define USE_SOCKET 0

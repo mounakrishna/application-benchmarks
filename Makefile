@@ -10,8 +10,8 @@ RISCV_LINK_OPTS ?= -static -nostartfiles -lgcc -T ./common/link.ld
 RISCV_HEX = elf2hex $(linesize) 4194304
 RISCV_OBJDUMP ?= $(RISCV_PREFIX)objdump -D
 OUTDIR ?= output
-FLAGS_STR = -mcmodel=medany -D$(target) -DPERFORMANCE_RUN=1 -DMAIN_HAS_NOARGC=1 -DHAS_STDIO \
-					  -DHAS_PRINTF -DHAS_TIME_H -DUSE_CLOCK -DHAS_FLOAT=0 -DITERATIONS=$(ITERATIONS) \
+FLAGS_STR = -mcmodel=medany -mtune=sifive-u74 -D$(target) -DPERFORMANCE_RUN=1 -DMAIN_HAS_NOARGC=1 -DHAS_STDIO \
+					  -DHAS_PRINTF -DHAS_FLOAT=0 -DITERATIONS=$(ITERATIONS) \
 						-O3 -fno-common -funroll-loops -finline-functions -fselective-scheduling \
 						-falign-functions=16 -falign-jumps=4 -falign-loops=4 -finline-limit=1000 \
 					 	-nostartfiles -nostdlib -ffast-math -fno-builtin-printf -march=rv$(xlen)$(march)\
@@ -72,18 +72,18 @@ hello:
 coremarks:
 	@echo "Compiling Coremarks"
 	@mkdir -p output/
-	@$(RISCV_GCC) -I./common -D$(target) -DCONFIG_RISCV64=True -mcmodel=medany -static -std=gnu99\
+	@$(RISCV_GCC) -I./common -D$(target) -g -DCONFIG_RISCV64=True -mcmodel=medany -static -std=gnu99\
 		-O2 -ffast-math -fno-common -fno-builtin-printf -march=rv$(xlen)$(march) -w -static\
 		-nostartfiles -lgcc -c common/crt.S -o output/crt.o
-	@$(RISCV_GCC) -I./common -D$(target) -DCONFIG_RISCV64=True -mcmodel=medany -static -std=gnu99\
+	@$(RISCV_GCC) -I./common -D$(target) -g -DCONFIG_RISCV64=True -mcmodel=medany -static -std=gnu99\
 		-O -ffast-math -fno-common -fno-builtin-printf -march=rv$(xlen)$(march) -w -static\
 		-nostartfiles -lgcc -c common/syscalls.c -o output/syscalls.o
-	$(RISCV_GCC) -I./common -I./coremarks $(FLAGS_STR) $(RISCV_LINK_OPTS) -o $(OUTDIR)/coremarks.riscv \
+	$(RISCV_GCC) -I./common -I./coremarks -g $(FLAGS_STR) $(RISCV_LINK_OPTS) -o $(OUTDIR)/coremarks.riscv \
 		./coremarks/core_util.c ./coremarks/ee_printf.c ./coremarks/core_state.c \
 		-DFLAGSTR=\"$(FLAGS)\" \
 		./coremarks/core_list_join.c ./coremarks/core_portme.c ./coremarks/core_main.c \
 		./coremarks/core_matrix.c ./output/crt.o ./output/syscalls.o
-	@$(RISCV_OBJDUMP) $(OUTDIR)/coremarks.riscv > $(OUTDIR)/coremarks.dump
+	@$(RISCV_OBJDUMP) -S $(OUTDIR)/coremarks.riscv > $(OUTDIR)/coremarks.dump
 	@$(RISCV_HEX) $(OUTDIR)/coremarks.riscv 2147483648 > $(OUTDIR)/code.mem
 
 COMPUTE_SIZE:=u16
