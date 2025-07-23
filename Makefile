@@ -122,7 +122,7 @@ BitNet:
 	@mkdir -p output/
 	$(RISCV_GCC) -I./common -I./BitNet -DCONFIG_RISCV64=True \
 		-D$(target)=True -DITERATIONS=$(ITERATIONS) -DHPM_ENABLE=$(HPM_ENABLE) \
-		-mcmodel=medany -static -std=gnu99 -O -ffast-math \
+		-mtune=sifive-u74 -mcmodel=medany -static -std=gnu99 -O -ffast-math \
 		-fno-common -fno-builtin-printf -march=rv$(xlen)$(march) -w -static \
 		-nostartfiles -lgcc -T ./common/link.ld -o $(OUTDIR)/BitNet.riscv ./BitNet/BitNetMCUdemo.c \
 		./common/syscalls.c ./common/crt.S
