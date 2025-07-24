@@ -1,8 +1,9 @@
 #include <stdio.h>
-#include "timing.h"
 #include <string.h>
 #include "inputs.h"
 #include "params.h"
+#include "timing.h"
+#include "encoding.h"
 
 type result[MATRIX_SIZE][MATRIX_SIZE];
 
@@ -121,7 +122,7 @@ void main(void)
     #endif
     printf("\n Total iteration: %d",it);
     printf("\n Average Number of Cycles: %d", sum/it);
-    printf("\n Total Number of Cycles: %d", sum);
+    printf("\n Total Number of Cycles: %d\n", sum);
 #if (HPM_ENABLE)
 	write_csr(mhpmevent3,0);
 	write_csr(mhpmevent4,0);
