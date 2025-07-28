@@ -1,7 +1,7 @@
 xlen ?= 64
 linesize=$$(($(xlen)/8))
 target ?= CUSTOM
-ITERATIONS ?= 1
+ITERATIONS ?= 5
 HPM_ENABLE ?= 1 #1 enable ,0 disable
 march ?= imafdc
 RISCV_PREFIX ?= riscv$(xlen)-unknown-elf-
@@ -10,7 +10,7 @@ RISCV_LINK_OPTS ?= -static -nostartfiles -lgcc -T ./common/link.ld
 RISCV_HEX = elf2hex $(linesize) 4194304
 RISCV_OBJDUMP ?= $(RISCV_PREFIX)objdump -D
 OUTDIR ?= output
-FLAGS_STR = -mcmodel=medany -mtune=sifive-u74 -D$(target) -DPERFORMANCE_RUN=1 -DMAIN_HAS_NOARGC=1 -DHAS_STDIO \
+FLAGS_STR = -mcmodel=medany -D$(target) -DPERFORMANCE_RUN=1 -DMAIN_HAS_NOARGC=1 -DHAS_STDIO \
 					  -DHAS_PRINTF -DHAS_FLOAT=0 -DITERATIONS=$(ITERATIONS) \
 						-O3 -fno-common -funroll-loops -finline-functions -fselective-scheduling \
 						-falign-functions=16 -falign-jumps=4 -falign-loops=4 -finline-limit=1000 \
@@ -122,7 +122,7 @@ BitNet:
 	@mkdir -p output/
 	$(RISCV_GCC) -I./common -I./BitNet -DCONFIG_RISCV64=True \
 		-D$(target)=True -DITERATIONS=$(ITERATIONS) -DHPM_ENABLE=$(HPM_ENABLE) \
-		-mtune=sifive-u74 -mcmodel=medany -static -std=gnu99 -O -ffast-math \
+		-mcmodel=medany -static -std=gnu99 -O -ffast-math \
 		-fno-common -fno-builtin-printf -march=rv$(xlen)$(march) -w -static \
 		-nostartfiles -lgcc -T ./common/link.ld -o $(OUTDIR)/BitNet.riscv ./BitNet/BitNetMCUdemo.c \
 		./common/syscalls.c ./common/crt.S
