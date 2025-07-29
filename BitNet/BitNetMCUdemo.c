@@ -22,13 +22,24 @@ const int8_t input_data_2[256] = {-21.0, -21.0, -21.0, -21.0, -21.0, -21.0, -21.
 const int8_t input_data_3[256] = {-20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -13.0, -15.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -6.0, 41.0, 78.0, 38.0, -18.0, -20.0, -20.0, -20.0, -20.0, -17.0, -17.0, -20.0, -20.0, -20.0, -20.0, -11.0, 67.0, 109.0, 63.0, 6.0, -20.0, -20.0, -20.0, -20.0, -8.0, 48.0, 50.0, -8.0, -20.0, -20.0, -20.0, 2.0, 108.0, 65.0, -14.0, -20.0, -20.0, -20.0, -20.0, -12.0, 59.0, 114.0, 89.0, 4.0, -20.0, -20.0, -20.0, 10.0, 114.0, 27.0, -20.0, -20.0, -20.0, -20.0, -20.0, 36.0, 122.0, 65.0, -14.0, -20.0, -20.0, -20.0, -20.0, -2.0, 96.0, 55.0, -13.0, -20.0, -20.0, -20.0, -12.0, 89.0, 114.0, 16.0, -20.0, -20.0, -20.0, -20.0, -20.0, -17.0, 43.0, 100.0, 46.0, -5.0, -15.0, -18.0, 6.0, 115.0, 84.0, -9.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -14.0, 45.0, 115.0, 100.0, 78.0, 50.0, 66.0, 127.0, 53.0, -17.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -13.0, 28.0, 76.0, 91.0, 104.0, 127.0, 122.0, 28.0, -18.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -19.0, -16.0, -14.0, -1.0, 71.0, 114.0, 8.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, 19.0, 112.0, 39.0, -13.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -11.0, 70.0, 89.0, 19.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -18.0, -6.0, -18.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0, -20.0};
 //const uint32_t label_3 = 4;
 
-void BitMnistInference(const int8_t *input, const uint8_t label, const uint8_t sample) {
+struct output {
+  int cycles;
+  int instructions;
+};
+
+struct output BitMnistInference(const int8_t *input, const uint8_t label, const uint8_t sample) {
     int32_t layer_out[MAX_N_ACTIVATIONS];
     int8_t layer_in[MAX_N_ACTIVATIONS];
-	int32_t prediction;
-	uint32_t startticks, endticks;
+	  int32_t prediction;
+	  int startticks, endticks;
+	  int startinstr, endinstr;
 
+    #if (HPM_ENABLE)
+      start_perf();
+    #endif
 	//startticks = SysTick->CNT;
+    startinstr = read_csr(minstret);
+    startticks = get_mcycle_start();
     processfclayer((int8_t*)input, L1_weights, L1_bitperweight, L1_incoming_weights, L1_outgoing_weights, layer_out);
     ReLUNorm(layer_out, layer_in, L1_outgoing_weights);
 
@@ -44,22 +55,21 @@ void BitMnistInference(const int8_t *input, const uint8_t label, const uint8_t s
 #endif
 
 	//endticks = SysTick->CNT;
+    endticks = get_mcycle_stop();
+    endinstr = read_csr(minstret);
+    #if (HPM_ENABLE)
+      stop_perf();
+    #endif
 
-	//printf( "Inference of Sample %d\tPrediction: %ld\tLabel: %d\tTiming: %lu clock cycles\n", sample, prediction, label, endticks-startticks);	
+  struct output o;
+  o.cycles = (endticks - startticks);
+  o.instructions = endinstr-startinstr;
+	printf( "Inference of Sample %d\tPrediction: %ld\tLabel: %d\tTiming: %lu clock cycles %lu instructions \n", sample, prediction, label, o.cycles, o.instructions);	
+
+  return o;
 }
 
-int main()
-{
-	//SystemInit();
-//	SysTick->CTLR = 5;  // Use HCLK as time base -> configured in funconfig.h
-//
-  
-  int iterations = (int) ITERATIONS;
-  int start_mcycle, stop_mcycle, total_cycles;
-  int start_minstret, stop_minstret, total_instr;
-
-	printf("Starting MNIST inference...\n");
-#if (HPM_ENABLE)
+void start_perf() {
 	write_csr(mhpmevent3, EVENT_MISPREDICTION     );
 	write_csr(mhpmevent4, EVENT_EXCEPTIONS        );
 	//write_csr(mhpmevent4, EVENT_MUL_BRANCH_HAZARD );
@@ -99,24 +109,9 @@ int main()
   write_csr(mhpmevent27,EVENT_EXEFLUSH          );
   write_csr(mhpmevent28,EVENT_WBFLUSH           );
   write_csr(mhpmevent29,EVENT_ST3_NOT_FIRING    );
-#endif
-  start_minstret = read_csr(minstret);
-  start_mcycle = get_mcycle_start();
-  write_csr(mcycle, 0);
-  write_csr(minstret, 0);
-  write_csr(0x800, 0x27); //Enable log start
-	for (int i=0; i<iterations; i++)
-	{
-		BitMnistInference(input_data_0, 7,1);	
-		BitMnistInference(input_data_1, 1,2);	
-		BitMnistInference(input_data_2, 9,3);	
-		BitMnistInference(input_data_3, 4,4);	
-		//Delay_Ms(1000);
-	}
-  write_csr(0x800, 0x07); //Disable log start
-  stop_mcycle = get_mcycle_stop();
-  stop_minstret = read_csr(minstret);
-#if (HPM_ENABLE)
+}
+
+void stop_perf() {
 	write_csr(mhpmevent3,0);
 	write_csr(mhpmevent4,0);
 	write_csr(mhpmevent5,0);
@@ -146,9 +141,61 @@ int main()
 	write_csr(mhpmevent29,0);
 	//write_csr(mhpmevent30,0);
 	//write_csr(mhpmevent31,0);
-#endif
-  total_cycles = stop_mcycle - start_mcycle;
-  total_instr = stop_minstret - start_minstret;
+}
+
+int main()
+{
+	//SystemInit();
+//	SysTick->CTLR = 5;  // Use HCLK as time base -> configured in funconfig.h
+//
+  
+  int iterations = (int) ITERATIONS;
+  //int cycles[4] = {0, 0, 0, 0};
+  struct output out[4] = {{0,0},{0,0},{0,0},{0,0}};
+  struct output tmp;
+  int total_cycles;
+  int start_minstret, stop_minstret, total_instr;
+
+	printf("Starting MNIST inference...\n");
+  start_minstret = read_csr(minstret);
+  //start_mcycle = get_mcycle_start();
+  write_csr(0x800, 0x27); //Enable log start
+  write_csr(mcycle, 0);
+  write_csr(minstret, 0);
+	for (int i=0; i<iterations; i++)
+	{
+		tmp = BitMnistInference(input_data_0, 7,1);
+    out[0].cycles += tmp.cycles;
+    out[0].instructions += tmp.instructions;
+	}
+	for (int i=0; i<iterations; i++)
+	{
+		tmp = BitMnistInference(input_data_1, 1,2);	
+    out[1].cycles += tmp.cycles;
+    out[1].instructions += tmp.instructions;
+  }
+	for (int i=0; i<iterations; i++)
+	{
+		tmp = BitMnistInference(input_data_2, 9,3);	
+    out[2].cycles += tmp.cycles;
+    out[2].instructions += tmp.instructions;
+  }
+	for (int i=0; i<iterations; i++)
+	{
+		tmp = BitMnistInference(input_data_3, 4,4);	
+    out[3].cycles += tmp.cycles;
+    out[3].instructions += tmp.instructions;
+  }
+  //stop_mcycle = get_mcycle_stop();
+  stop_minstret = read_csr(minstret);
+  write_csr(0x800, 0x07); //Disable log start
+  total_cycles = out[0].cycles + out[1].cycles + out[2].cycles + out[3].cycles;
+  total_instr = out[0].instructions + out[1].instructions + out[2].instructions + out[3].instructions;
+  //total_instr = stop_minstret - start_minstret;
+  printf("Sample 1 instructions: %d time taken: %d label: 7\n", out[0].instructions/iterations, out[0].cycles/iterations);
+  printf("Sample 2 instructions: %d time taken: %d label: 1\n", out[1].instructions/iterations, out[1].cycles/iterations);
+  printf("Sample 3 instructions: %d time taken: %d label: 9\n", out[2].instructions/iterations, out[2].cycles/iterations);
+  printf("Sample 4 instructions: %d time taken: %d label: 4\n", out[3].instructions/iterations, out[3].cycles/iterations);
   printf("Total Cycles to execute: %d\n", total_cycles);
   printf("Total instructions executed: %d\n", total_instr);
 #if (HPM_ENABLE)
