@@ -109,13 +109,13 @@ pixel_sad:
 	@echo "Compiling SAD16x16"
 	@mkdir -p output/
 	@python3 pixel_sad/input_generator.py
-	$(RISCV_GCC) -I./common -I./pixel_sad -DCONFIG_RISCV64=True \
+	$(RISCV_GCC) -I./common -I./pixel_sad -g -DCONFIG_RISCV64=True \
 				-D$(target)=True -DITERATIONS=$(ITERATIONS) \
 				-mcmodel=medany -static -std=gnu99 -O -ffast-math \
 				-fno-common -fno-builtin-printf -march=rv$(xlen)$(march) -w -static \
 				-nostartfiles -lgcc -T ./common/link.ld -o $(OUTDIR)/pixel_sad.riscv ./pixel_sad/pixel_sad.c \
 				./common/syscalls.c ./common/crt.S
-	@$(RISCV_OBJDUMP) $(OUTDIR)/pixel_sad.riscv > $(OUTDIR)/pixel_sad.dump
+	@$(RISCV_OBJDUMP) -S $(OUTDIR)/pixel_sad.riscv > $(OUTDIR)/pixel_sad.dump
 	@$(RISCV_HEX) $(OUTDIR)/pixel_sad.riscv 2147483648 > $(OUTDIR)/code.mem
 
 .PHONY: conv2d

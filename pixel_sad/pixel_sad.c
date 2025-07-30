@@ -13,7 +13,7 @@ static int pixel_sad( pixel *pix1, intptr_t i_stride_pix1,
     for( int y = 0; y < ly; y++ )                   
     {                                               
         for( int x = 0; x < lx; x++ )               
-        {                                     
+        {
             i_sum += abs( pix1[x] - pix2[x] );
         }                                     
         pix1 += i_stride_pix1;                
@@ -37,10 +37,13 @@ int main() {
   write_csr(minstret, 0);
   write_csr(mcycle, 0);
   for (int i=0; i<iterations; i++)
-    sum = pixel_sad(&pix1, &pix2, 0, 0);
+    sum = pixel_sad(pix1, 16, pix2, 16);
   end_cycles = read_csr(mcycle);
   end_instr = read_csr(minstret);
   write_csr(0x800, 0x07); //Disable log start
+#if (HPM_ENABLE)
+  stop_perf();
+#endif
   if (sum != expected_sad) {
     printf("Output is wrong!! Expected SUM: %d, Computed SUM: %d", expected_sad, sum);
     return 0;
@@ -48,7 +51,6 @@ int main() {
   printf("Total cycles to execute: %d\n", (end_cycles - start_cycles));
   printf("Total instructions executed: %d\n", (end_instr - start_instr));
 #if (HPM_ENABLE)
-  stop_perf();
   print_perf();
 #endif
 }

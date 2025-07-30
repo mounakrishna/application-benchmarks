@@ -34,10 +34,10 @@ c_pix2 = to_c_array("pix2", pix2)
 sad_c = f"const int expected_sad = {sad_value};\n"
 
 header_content = "// Generated input pixel data for SAD testing\n" 
-header_content += "typedef uint16_t pixel;\n"
+header_content += "typedef unsigned char pixel;\n"
 header_content += c_pix1 + "\n" + c_pix2 + "\n" + sad_c
 
-with open("inputs.h", "w") as file:
+with open("pixel_sad/inputs.h", "w") as file:
     file.write(header_content)
 
 # Write pix1 and pix2 blocks to console or to files as needed:
