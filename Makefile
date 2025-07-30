@@ -110,7 +110,7 @@ pixel_sad:
 	@mkdir -p output/
 	@python3 pixel_sad/input_generator.py
 	$(RISCV_GCC) -I./common -I./pixel_sad -g -DCONFIG_RISCV64=True \
-				-D$(target)=True -DITERATIONS=$(ITERATIONS) \
+				-D$(target)=True -DHPM_ENABLE=$(HPM_ENABLE) -DITERATIONS=$(ITERATIONS) \
 				-mcmodel=medany -static -std=gnu99 -O -ffast-math \
 				-fno-common -fno-builtin-printf -march=rv$(xlen)$(march) -w -static \
 				-nostartfiles -lgcc -T ./common/link.ld -o $(OUTDIR)/pixel_sad.riscv ./pixel_sad/pixel_sad.c \
