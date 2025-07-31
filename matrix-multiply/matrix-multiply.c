@@ -63,6 +63,7 @@ int main()
     #ifdef HPM_ENABLE
       start_perf();
     #endif
+    write_csr(0x800, 0x27); //Enable log start
     for(i=0; i<it; i++){
       start_minstret = read_csr(minstret);
       start_mcycle = get_mcycle_start();
@@ -75,6 +76,7 @@ int main()
       total_cycles += stop_mcycle - start_mcycle;
       total_instructions += stop_minstret - start_minstret;
     }
+    write_csr(0x800, 0x07); //Disable log start
     #ifdef HPM_ENABLE
       stop_perf();
     #endif
