@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include "timing.h"
+#include "util.h"
+#include "encoding.h"
 #define IMG_SIZE 10
 
 // conv2d.c
@@ -71,27 +73,44 @@ int test_check() {
 
 // main.c
 int main() {
-  uint64_t total_cycles;
-  float total_ns;
+  uint64_t total_cycles, total_instr;
   uint64_t start_mcycle, stop_mcycle;
-  float sum_time=0;
-  int sum=0;
+  uint64_t start_minstret, stop_minstret;
+  int it = ITERATIONS;
 
   test_setup();
   test_clear();
+#if (HPM_ENABLE)
+  start_perf();
+#endif
+  start_minstret = read_csr(minstret);
   start_mcycle = get_mcycle_start();
-  test_run();
+  for (int i=0; i<it; i++) {
+    test_run();
+  }
   stop_mcycle = get_mcycle_stop();
-
-  total_cycles = stop_mcycle - start_mcycle;
-  sum += total_cycles;
+  stop_minstret = read_csr(minstret);
+#if (HPM_ENABLE)
+  stop_perf();
+#endif
 
   int check = test_check();
 
-  if (check == 1)
-    printf("== test:-> success, nr. of errors: %d, Total Number of Cycles: %d",0,total_cycles);
-  else
-    printf("== test:-> fail, nr. of errors: %d\n",1);
+  if (check != 1) {
+    printf("Output Check Failed\n");
+    return 0;
+  }
+
+  total_cycles = stop_mcycle - start_mcycle;
+  total_instr = stop_minstret - start_minstret;
+
+  printf("Number of iterations: %d\n", it);
+  printf("Image Size: %d\n", IMG_SIZE);
+  printf("Total Cycles to execute: %d\n", total_cycles);
+  printf("Total Instructions executed: %d\n", total_instr);
+#if (HPM_ENABLE)
+  print_perf();
+#endif
 
   return 0;
 }

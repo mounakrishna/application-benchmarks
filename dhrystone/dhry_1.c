@@ -172,6 +172,16 @@ main ()
   /* Start timer */
   /***************/
 
+  int start_cycles, end_cycles;
+  int start_instr, end_instr;
+  #if (HPM_ENABLE)
+    start_perf();
+  #endif
+    write_csr(0x800, 0x27); //Enable log start
+    write_csr(minstret, 0);
+    write_csr(mcycle, 0);
+    start_instr = read_csr(minstret);
+    start_cycles = read_csr(mcycle);
 #ifdef TIMES
 #ifdef CONFIG_RISCV64
   Begin_Time = read_csr(mcycle);
@@ -250,6 +260,19 @@ main ()
 #endif
 #ifdef MSC_CLOCK
   End_Time = clock();
+#endif
+  end_cycles = read_csr(mcycle);
+  end_instr = read_csr(minstret);
+  write_csr(0x800, 0x07); //Disable log start
+#if (HPM_ENABLE)
+  stop_perf();
+#endif
+
+  printf("Total cycles to execute: %d\n", (end_cycles - start_cycles));
+  printf("Total instructions executed: %d\n", (end_instr - start_instr));
+  printf("Total iterations: %d\n", Number_Of_Runs);
+#if (HPM_ENABLE)
+  print_perf();
 #endif
 
   User_Time = End_Time - Begin_Time;
