@@ -96,7 +96,7 @@ matrix-multiply:
 	@mkdir -p output/
 	@python3 matrix-multiply/gen_inputs.py $(MATRIX_SIZE)
 	$(RISCV_GCC) -I./common -I./matrix-multiply -DCONFIG_RISCV64=True \
-				-D$(target)=True -DDEBUG -DMATRIX_SIZE=$(MATRIX_SIZE) -D$(COMPUTE_SIZE) -DITERATIONS=$(ITERATIONS) \
+				-D$(target)=True -DHPM_ENABLE=$(HPM_ENABLE) -DMATRIX_SIZE=$(MATRIX_SIZE) -D$(COMPUTE_SIZE) -DITERATIONS=$(ITERATIONS) \
 				-mcmodel=medany -static -std=gnu99 -O -ffast-math \
 				-fno-common -fno-builtin-printf -march=rv$(xlen)$(march) -w -static \
 				-nostartfiles -lgcc -T ./common/link.ld -o $(OUTDIR)/matrix-multiply.riscv ./matrix-multiply/matrix-multiply.c \

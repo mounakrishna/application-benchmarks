@@ -1,6 +1,3 @@
-#define ITERATION 10
-#define MATRIX_SIZE 4
-
 #ifdef u8
   typedef uint8_t type;
 #elif u16
