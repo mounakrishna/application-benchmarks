@@ -103,7 +103,6 @@ int main()
     }
     printf("\nTotal iteration: %d",it);
     printf("\nMatrix Size: %d", MATRIX_SIZE);
-    printf("\nAverage Number of Cycles: %d", total_cycles/it);
     printf("\nTotal Number of Cycles: %d", total_cycles);
     printf("\nTotal Number of Instructions: %d\n", total_instructions);
     #if (HPM_ENABLE)
