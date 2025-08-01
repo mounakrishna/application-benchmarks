@@ -50,6 +50,7 @@ int main() {
   }
   printf("Total cycles to execute: %d\n", (end_cycles - start_cycles));
   printf("Total instructions executed: %d\n", (end_instr - start_instr));
+  printf("Total iterations: %d\n", iterations);
 #if (HPM_ENABLE)
   print_perf();
 #endif

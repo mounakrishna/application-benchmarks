@@ -125,6 +125,7 @@ int main()
   printf("Sample 4 instructions: %d time taken: %d label: 4\n", out[3].instructions/iterations, out[3].cycles/iterations);
   printf("Total Cycles to execute: %d\n", total_cycles);
   printf("Total instructions executed: %d\n", total_instr);
+  printf("Total iterations: %d\n", iterations);
 #if (HPM_ENABLE)
   print_perf();
 #endif
