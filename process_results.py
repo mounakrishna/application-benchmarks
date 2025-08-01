@@ -4,7 +4,7 @@ import csv
 directory = "output/results"
 
 result = []
-fieldnames = ['Benchmark', 'Iterations', 'Cycles', 'Instructions', 'Branches', 'Jumps', 'Mispredictions', 'Dual Issued', 'RAW Hazards', 'MEM BRANCH Hazards']
+fieldnames = ['Benchmark', 'Iterations', 'Cycles', 'Instructions', 'Branches', 'Jumps', 'Mispredictions', 'Dual Issued', 'RAW Hazards', 'MEM BRANCH Hazards', 'IPC']
 
 for filename in os.listdir(directory):
     filepath = os.path.join(directory, filename)
@@ -36,9 +36,9 @@ for filename in os.listdir(directory):
                         data["Cycles"] = int(txt.split()[-1])
                 if "instructions" in txt:
                     if "Instructions" in data:
-                        data["Instructions"] += txt.split()[-1]
+                        data["Instructions"] += int(txt.split()[-1])
                     else:
-                        data["Instructions"] = txt.split()[-1]
+                        data["Instructions"] = int(txt.split()[-1])
                 if "iterations" in txt:
                     data["Iterations"] = txt.split()[-1]
             else:
@@ -61,6 +61,7 @@ for filename in os.listdir(directory):
                 data["RAW Hazards"] = txt.strip("raw_hazard=").strip()
             if "mem_branch" in txt:
                 data["MEM BRANCH Hazards"] = txt.strip("mem_branch_hazard=").strip()
+        data["IPC"] = round(float(data["Instructions"]) / float(data["Cycles"]), 3)
     result.append(data)
 
 
