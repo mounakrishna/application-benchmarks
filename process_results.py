@@ -1,7 +1,8 @@
 import os
 import csv
 
-directory = "output/results"
+suffix = 'btb32_instrQ2'
+directory = "output/results_" + suffix
 
 result = []
 fieldnames = ['Benchmark', 'Iterations', 'Cycles', 'Instructions', 'Branches', 'Jumps', 'Mispredictions', 'Dual Issued', 'RAW Hazards', 'MEM BRANCH Hazards', 'IPC']
@@ -65,9 +66,22 @@ for filename in os.listdir(directory):
     result.append(data)
 
 
-with open('results.csv', 'w', newline='') as file:
+total_ipc = 0
+number_of_benchmarks = len(result)
+for data in result:
+    total_ipc += float(data["IPC"])
+avg_ipc = round(total_ipc / number_of_benchmarks, 4)
+
+with open('results_' + suffix + '.csv', 'w', newline='') as file:
     writer = csv.DictWriter(file, fieldnames=fieldnames)
     writer.writeheader()             # Write header row
     writer.writerows(result)            # Write data rows
+    #writer.writerow([""])
+
+with open('results_' + suffix + '.csv', 'a', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow([''])
+    writer.writerow(["Average IPC"] + [avg_ipc])
+
 
 print("CSV file 'people_dict.csv' created successfully.")
