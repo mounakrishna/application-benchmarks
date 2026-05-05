@@ -1,2 +1,2 @@
-# Vector-benchmarks
+# Application-benchmarks
 Contains the benchmarks which is going to be used for my MS project analysis
