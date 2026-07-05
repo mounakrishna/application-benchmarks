@@ -248,6 +248,20 @@ binary_search:
 	@$(RISCV_OBJDUMP) $(OUTDIR)/binary_search.riscv > $(OUTDIR)/binary_search.dump
 	@$(RISCV_HEX) $(OUTDIR)/binary_search.riscv 2147483648 > $(OUTDIR)/code.mem
 
+.PHONY: qsort
+qsort:
+	@echo "Compiling Quick Sort"
+	@mkdir -p output/
+	@python3 qsort/gen_inputs.py
+	$(RISCV_GCC) -I./common -I./qsort -DCONFIG_RISCV64=True \
+				-D$(target)=True -DHPM_ENABLE=$(HPM_ENABLE) -DITERATIONS=$(ITERATIONS) \
+				-mcmodel=medany -static -std=gnu99 -O2 -ffast-math \
+				-fno-common -fno-builtin-printf -march=rv$(xlen)$(march) -w -static \
+				-nostartfiles -lgcc -T ./common/link.ld -o $(OUTDIR)/qsort.riscv ./qsort/qsort.c \
+				./common/syscalls.c ./common/crt.S
+	@$(RISCV_OBJDUMP) $(OUTDIR)/qsort.riscv > $(OUTDIR)/qsort.dump
+	@$(RISCV_HEX) $(OUTDIR)/qsort.riscv 2147483648 > $(OUTDIR)/code.mem
+
 INP_SIZE:=100
 .PHONY: autocorrelation
 autocorrelation:
