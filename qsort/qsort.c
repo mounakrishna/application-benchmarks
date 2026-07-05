@@ -38,6 +38,9 @@ void quick_sort(int arr[], int low, int high) {
 
 // Volatile variable easily visible in RTL simulations / memory dumps
 volatile int test_status = 0; // 0 = Running/Untested, 1 = Pass, 2 = Fail
+// Create a backup array to restore the unsorted data each iteration
+int backup_array[ARRAY_SIZE];
+volatile int current_iteration = 0; // Tracks progress in your wave viewer
 
 int main() {
     int pass = 1;
@@ -54,9 +57,19 @@ int main() {
     start_instr = read_csr(minstret);
     start_cycles = read_csr(mcycle);
 
+    for (int i = 0; i < ARRAY_SIZE; i++) {
+        backup_array[i] = input_array[i];
+    }
+
     // Run the sort
-    for (int i = 0; i<it; i++) {
-      quick_sort(input_array, 0, ARRAY_SIZE - 1);
+    for (int iter = 0; iter < ITERATIONS; iter++) {
+        current_iteration = iter + 1;
+
+        // Restore the unsorted array from backup (Forces cold/capacity D$ misses again)
+        for (int i = 0; i < ARRAY_SIZE; i++) {
+            input_array[i] = backup_array[i];
+        }
+        quick_sort(input_array, 0, ARRAY_SIZE - 1);
     }
 
     end_cycles = read_csr(mcycle);
